@@ -5,8 +5,6 @@
 const char* DataFetcher::API_URL = "https://maps.trilliumtransit.com/gtfsmap-realtime/feed/ccta-vt-us/arrivals?stopCode=805574&stopID=805574";
 
 bool DataFetcher::fetch(std::vector<BusArrival>& arrivals) {
-    arrivals.clear();
-
     HTTPClient http;
     http.begin(API_URL);
     http.setTimeout(10000);
@@ -37,6 +35,8 @@ bool DataFetcher::fetch(std::vector<BusArrival>& arrivals) {
 
     JsonArray data = doc["data"].as<JsonArray>();
 
+    // Only overwrite arrivals after successful parse
+    std::vector<BusArrival> newArrivals;
     for (JsonObject arrival : data) {
         BusArrival bus;
         bus.routeId = arrival["route_id"].as<const char*>();
@@ -48,9 +48,10 @@ bool DataFetcher::fetch(std::vector<BusArrival>& arrivals) {
         unsigned long now = time(nullptr);
         bus.minutesAway = (arrivalTime - now) / 60;
 
-        arrivals.push_back(bus);
+        newArrivals.push_back(bus);
     }
 
+    arrivals = std::move(newArrivals);
     Serial.printf("Fetched %d arrivals\n", arrivals.size());
     return true;
 }

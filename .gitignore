@@ -4,3 +4,5 @@
 build/
 
 src/secrets.h
+# Generated fonts
+src/font_*.h
